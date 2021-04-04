@@ -13,7 +13,7 @@ function App() {
 	const [inputVal, setInputVal] = useState('');
 	const [currentClientId, setCurrentClientId] = useState('');
 	const [youtubeResults, setYoutubeResults] = useState([]);
-	const [videoId] = useAtom(selectedVideoId);
+	const [videoId, setCurrentVideoId] = useAtom(selectedVideoId);
 
 	useEffect(() => {
 		room.on('open', (error) => {
@@ -28,20 +28,15 @@ function App() {
 			if (messageObj.clientId !== currentClientId) {
 				const { data } = messageObj;
 				console.log(messageObj);
-				if (data.search !== inputVal) {
-					setInputVal(data.search);
-				}
+				setInputVal(data.search);
+				setYoutubeResults(data.results);
+				setCurrentVideoId(data.currentVideo);
 			}
 		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	useEffect(() => {
-		if (inputVal) {
-			drone.publish({ room: 'test', message: { search: inputVal } });
-		}
-	}, [inputVal]);
-
+	// TODO: user selects a video from list of video then, video player should be updated as selection
 	const onSearch = async () => {
 		const opts = {
 			maxResults: 10,
@@ -49,6 +44,7 @@ function App() {
 		};
 		const res = await search(inputVal, opts);
 		setYoutubeResults(res.results);
+		drone.publish({ room: 'test', message: { search: inputVal, results: res.results, currentVideo: videoId } });
 	};
 	return (
 		<div className='App'>
